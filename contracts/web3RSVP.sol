@@ -15,23 +15,23 @@ contract Web3RSVP {
   }
 
   mapping(bytes32 => CreateEvent) public idToEvent;
-}
 
-function createNewEvent (
-  uint256 eventTimestamp,
-  uint256 deposit,
-  uint256 maxCapacity,
-  string calldata eventDataCID
-) external {
-		bytes32 eventId = keccak256(
-			abi.encodePacked(
-				msg.sender,
-				address(this),
-				eventTimestamp,
-				deposit,
-				maxCapacity
-			)
-		);
+
+	function createNewEvent (
+	uint256 eventTimestamp,
+	uint256 deposit,
+	uint256 maxCapacity,
+	string calldata eventDataCID
+	) external {
+			bytes32 eventId = keccak256(
+				abi.encodePacked(
+					msg.sender,
+					address(this),
+					eventTimestamp,
+					deposit,
+					maxCapacity
+				)
+			);
 
 		address[] memory confirmedRSVPs;
 		address[] memory claimedRSVPs;	
@@ -44,7 +44,69 @@ function createNewEvent (
 			deposit,
 			maxCapacity,
 			confirmedRSVPs,
-			claimedRVSPs,
+			claimedRSVPs,
 			false
 		);	
+	}	
+function createNewRSVP(bytes32 eventId) external payable {
+	CreateEvent storage myEvent = idToEvent[eventId];
+
+	require(msg.value == myEvent.deposit, "NOT ENOUGH");
+
+	require(block.timestamp <= myEvent.eventTimestamp, "ALREADY HAPPENED");
+	
+	require(
+		myEvent.confirmedRSVPs.length < myEvent.maxCapacity,
+		"This event has reached capacity"
+	);
+
+	for (uint8 i = 0; i < myEvent.confirmedRSVPs.length; i++) {
+		require(myEvent.confirmedRSVPs[i] != msg.sender, "ALREADY CONFIRMED");
+	}
+
+	myEvent.confirmedRSVPs.push(payable(msg.sender));
+}
+
+	function confirmAttendee(bytes32 eventId, address attendee) public {
+		CreateEvent storage myEvent = idToEvent[eventId];
+
+		require(msg.sender == myEvent.eventOwner, "NOT AUTHORIZED");
+
+		address rsvpConfirm;
+
+		for (uint8 i = 0; i < myEvent.confirmedRSVPs.length; i++) {
+			if(myEvent.confirmedRSVPs[i] == attendee){
+				rsvpConfirm = myEvent.confirmedRSVPs[i];
+			}
+		}
+
+		require(rsvpConfirm == attendee, "NO RSVP TO CONFIRM");
+
+		for (uint8 i = 0; i < myEvent.claimedRSVPs.length; i++) {
+			require(myEvent.claimedRSVPs[i] != attendee, "ALREADY CLAIMED");
+
+			myEvent.claimedRSVPs.push(attendee);
+
+			(bool sent,) = attendee.call{value:myEvent.deposit}("");
+
+			if (!sent) {
+				myEvent.claimedRSVPs.pop();
+			}
+
+			require(sent, "Failed to send Ether");
+		}
+
+	}
+
+	function confirmAllAttendees(bytes32 eventId) external {
+		CreateEvent memory myEvent = idToEvent[eventId];
+
+		require(msg.sender == myEvent.eventOwner, "NOT AUTHORIZED");
+
+		for (uint8 i = 0; i <myEvent.confirmedRSVPs.length; i++) {
+			confirmAttendee(eventId, myEvent.confirmedRSVPs[i]);
+		}
+	}
+	
+
 }
