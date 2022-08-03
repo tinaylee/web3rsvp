@@ -16,3 +16,35 @@ contract Web3RSVP {
 
   mapping(bytes32 => CreateEvent) public idToEvent;
 }
+
+function createNewEvent (
+  uint256 eventTimestamp,
+  uint256 deposit,
+  uint256 maxCapacity,
+  string calldata eventDataCID
+) external {
+		bytes32 eventId = keccak256(
+			abi.encodePacked(
+				msg.sender,
+				address(this),
+				eventTimestamp,
+				deposit,
+				maxCapacity
+			)
+		);
+
+		address[] memory confirmedRSVPs;
+		address[] memory claimedRSVPs;	
+
+		idToEvent[eventId] = CreateEvent(
+			eventId,
+			eventDataCID,
+			msg.sender,
+			eventTimestamp,
+			deposit,
+			maxCapacity,
+			confirmedRSVPs,
+			claimedRVSPs,
+			false
+		);	
+}
