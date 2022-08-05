@@ -3,6 +3,21 @@ pragma solidity ^0.8.0;
 
 //Contract is like a class in OOP (blueprint for object)
 contract Web3RSVP {
+event NewEventCreated (
+	bytes32 eventID,
+	address creatorAddress,
+	uint256 eventTimestamp,
+	uint256 maxCapacity,
+	uint256 deposit,
+	string eventDataCID
+);
+
+event NewRSVP(bytes32 eventID, address attendeeAddress);
+
+event ConfirmedAttendee(bytes32 eventID, address attendeeAddress);
+
+event DepositsPaidOut(bytes32 eventID);
+
 //Data structure for the events, each event will have these details
   	struct CreateEvent {
 		bytes32 eventId;
@@ -51,7 +66,17 @@ contract Web3RSVP {
 			confirmedRSVPs,
 			claimedRSVPs,
 			false
+		);
+
+		emit NewEventCreated(
+			eventId,
+			msg.sender,
+			eventTimestamp,
+			maxCapacity,
+			deposit,
+			eventDataCID
 		);	
+
 	}	
 
 	//Creates a new RSVP record when somebody RSVPs to an event on the website
@@ -73,6 +98,8 @@ contract Web3RSVP {
 		}
 
 		myEvent.confirmedRSVPs.push(payable(msg.sender));
+
+		emit NewRSVP(eventId, msg.sender);
 	}
 
 	//Confirms that an attendee who RSVPed attended the event, disburses deposit back to attendee wallet
@@ -110,6 +137,7 @@ contract Web3RSVP {
 			require(sent, "Failed to send Ether");
 		}
 
+		emit ConfirmedAttendee(eventId, attendee);
 	}
 
 	//Batch confirm attendees
@@ -150,6 +178,8 @@ contract Web3RSVP {
 		}
 
 		require(sent, "Failed to sent Ether");
+
+		emit DepositsPaidOut(eventId);
 
 
 
