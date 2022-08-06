@@ -58,7 +58,7 @@ event DepositsPaidOut(bytes32 eventID);
 				);
 		//3. Looks in the idToEvent mapping for the eventId and checks if the an event has already been initialized.  If the event
 		//has not been created with all the same info, eventTimestamp associated with this generated eventId should be 0 or uninitialized.
-		require(idToEvent[eventId].eventTimestamp == 0, "ALREADY REGISTERED");
+		// require(idToEvent[eventId].eventTimestamp == 0, "ALREADY REGISTERED");
 
 		address[] memory confirmedRSVPs;
 		address[] memory claimedRSVPs;	
@@ -183,15 +183,9 @@ event DepositsPaidOut(bytes32 eventID);
 		if(!sent) {
 			myEvent.paidOut = false;
 		}
-
+		
 		require(sent, "Failed to sent Ether");
 
 		emit DepositsPaidOut(eventId);
-
-
-
-
 	}
-
-
 }
