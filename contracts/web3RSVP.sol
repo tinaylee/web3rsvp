@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 //Contract is like a class in OOP (blueprint for object)
 contract Web3RSVP {
+/*Events are triggers.  Calling emit at the end of a our functions will expose the event data from the functions.
+Will use this to create a dashboard (by using subgraphs, more to come in a future lesson)
+*/
 event NewEventCreated (
 	bytes32 eventID,
 	address creatorAddress,
@@ -37,12 +40,13 @@ event DepositsPaidOut(bytes32 eventID);
 
 //Function that is called when user creates new event on website front end
 	function createNewEvent (
+		//1. Takes in these arguments
 		uint256 eventTimestamp,
 		uint256 deposit,
 		uint256 maxCapacity,
 		string calldata eventDataCID
 		) external {
-				//Generates unique eventID based on below parameters
+				//2. Generates unique eventID based on below parameters
 				bytes32 eventId = keccak256(
 					abi.encodePacked(
 						msg.sender,
@@ -52,10 +56,13 @@ event DepositsPaidOut(bytes32 eventID);
 						maxCapacity
 					)
 				);
+		//3. Looks in the idToEvent mapping for the eventId and checks if the an event has already been initialized.  If the event
+		//has not been created with all the same info, eventTimestamp associated with this generated eventId should be 0 or uninitialized.
+		require(idToEvent[eventId].eventTimestamp == 0, "ALREADY REGISTERED");
 
 		address[] memory confirmedRSVPs;
 		address[] memory claimedRSVPs;	
-		//Creates a new CreateEvent struct and adds it to idToEvent mapping
+		//4. Here is where the new event is actually created and added to idToEvent mapping
 		idToEvent[eventId] = CreateEvent(
 			eventId,
 			eventDataCID,
@@ -174,7 +181,7 @@ event DepositsPaidOut(bytes32 eventID);
 		(bool sent, ) = msg.sender.call{value: payout}("");
 
 		if(!sent) {
-			myEvent.paidOut == false;
+			myEvent.paidOut = false;
 		}
 
 		require(sent, "Failed to sent Ether");

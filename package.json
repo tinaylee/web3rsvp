@@ -4,6 +4,7 @@
   "description": "Events RSVP platform on web3",
   "main": "index.js",
   "scripts": {
+    "script": "node scripts/run.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Tina Lee",
